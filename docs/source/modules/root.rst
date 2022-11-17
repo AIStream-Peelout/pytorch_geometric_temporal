@@ -85,6 +85,18 @@ Temporal Graph Attention Layers
     :undoc-members:
     :exclude-members: Linear, MixProp, DilatedInception, LayerNormalization, MTGNNLayer
 
+.. automodule:: torch_geometric_temporal.nn.attention.tsagcn
+    :members:
+    :undoc-members:
+    :exclude-members: UnitGCN, UnitTCN, bn_init, conv_init, conv_branch_init, GraphAAGCN
+    
+    
+.. automodule:: torch_geometric_temporal.nn.attention.dnntsp
+    :members:
+    :undoc-members:
+    :exclude-members: WeightedGCNBlock, AggregateTemporalNodeFeatures, GlobalGatedUpdater, MaskedSelfAttention
+
+
 Auxiliary Graph Convolutional Layers
 --------------
 
@@ -107,3 +119,16 @@ Auxiliary Graph Convolutional Layers
     :members:
     :undoc-members:
     :exclude-members: AGCRN
+
+.. automodule:: torch_geometric_temporal.nn.attention.tsagcn
+    :members:
+    :undoc-members:
+    :exclude-members: bn_init, conv_init, conv_branch_init, GraphAAGCN, AAGCN
+
+
+Heterogeneous Graph Convolutional Layers
+--------------
+
+.. automodule:: torch_geometric_temporal.nn.hetero.heterogclstm
+    :members:
+    :undoc-members:

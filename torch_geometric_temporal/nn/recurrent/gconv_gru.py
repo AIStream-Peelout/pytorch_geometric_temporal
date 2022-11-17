@@ -34,8 +34,15 @@ class GConvGRU(torch.nn.Module):
         bias (bool, optional): If set to :obj:`False`, the layer will not learn
             an additive bias. (default: :obj:`True`)
     """
-    def __init__(self, in_channels: int, out_channels: int, K: int,
-                 normalization: str="sym", bias: bool=True):
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        K: int,
+        normalization: str = "sym",
+        bias: bool = True,
+    ):
         super(GConvGRU, self).__init__()
 
         self.in_channels = in_channels
@@ -45,92 +52,100 @@ class GConvGRU(torch.nn.Module):
         self.bias = bias
         self._create_parameters_and_layers()
 
-
     def _create_update_gate_parameters_and_layers(self):
 
-        self.conv_x_z = ChebConv(in_channels=self.in_channels,
-                                 out_channels=self.out_channels,
-                                 K=self.K,
-                                 normalization=self.normalization,
-                                 bias=self.bias)
+        self.conv_x_z = ChebConv(
+            in_channels=self.in_channels,
+            out_channels=self.out_channels,
+            K=self.K,
+            normalization=self.normalization,
+            bias=self.bias,
+        )
 
-        self.conv_h_z = ChebConv(in_channels=self.out_channels,
-                                 out_channels=self.out_channels,
-                                 K=self.K,
-                                 normalization=self.normalization,
-                                 bias=self.bias)
-
+        self.conv_h_z = ChebConv(
+            in_channels=self.out_channels,
+            out_channels=self.out_channels,
+            K=self.K,
+            normalization=self.normalization,
+            bias=self.bias,
+        )
 
     def _create_reset_gate_parameters_and_layers(self):
 
-        self.conv_x_r = ChebConv(in_channels=self.in_channels,
-                                 out_channels=self.out_channels,
-                                 K=self.K,
-                                 normalization=self.normalization,
-                                 bias=self.bias)
+        self.conv_x_r = ChebConv(
+            in_channels=self.in_channels,
+            out_channels=self.out_channels,
+            K=self.K,
+            normalization=self.normalization,
+            bias=self.bias,
+        )
 
-        self.conv_h_r = ChebConv(in_channels=self.out_channels,
-                                 out_channels=self.out_channels,
-                                 K=self.K,
-                                 normalization=self.normalization,
-                                 bias=self.bias)
-
+        self.conv_h_r = ChebConv(
+            in_channels=self.out_channels,
+            out_channels=self.out_channels,
+            K=self.K,
+            normalization=self.normalization,
+            bias=self.bias,
+        )
 
     def _create_candidate_state_parameters_and_layers(self):
 
-        self.conv_x_h = ChebConv(in_channels=self.in_channels,
-                                 out_channels=self.out_channels,
-                                 K=self.K,
-                                 normalization=self.normalization,
-                                 bias=self.bias)
+        self.conv_x_h = ChebConv(
+            in_channels=self.in_channels,
+            out_channels=self.out_channels,
+            K=self.K,
+            normalization=self.normalization,
+            bias=self.bias,
+        )
 
-        self.conv_h_h = ChebConv(in_channels=self.out_channels,
-                                 out_channels=self.out_channels,
-                                 K=self.K,
-                                 normalization=self.normalization,
-                                 bias=self.bias)
-
+        self.conv_h_h = ChebConv(
+            in_channels=self.out_channels,
+            out_channels=self.out_channels,
+            K=self.K,
+            normalization=self.normalization,
+            bias=self.bias,
+        )
 
     def _create_parameters_and_layers(self):
         self._create_update_gate_parameters_and_layers()
         self._create_reset_gate_parameters_and_layers()
         self._create_candidate_state_parameters_and_layers()
 
-
     def _set_hidden_state(self, X, H):
         if H is None:
             H = torch.zeros(X.shape[0], self.out_channels).to(X.device)
         return H
 
-
-    def _calculate_update_gate(self, X, edge_index, edge_weight, H):
-        Z = self.conv_x_z(X, edge_index, edge_weight)
-        Z = Z + self.conv_h_z(H, edge_index, edge_weight)
+    def _calculate_update_gate(self, X, edge_index, edge_weight, H, lambda_max):
+        Z = self.conv_x_z(X, edge_index, edge_weight, lambda_max=lambda_max)
+        Z = Z + self.conv_h_z(H, edge_index, edge_weight, lambda_max=lambda_max)
         Z = torch.sigmoid(Z)
         return Z
 
-
-    def _calculate_reset_gate(self, X, edge_index, edge_weight, H):
-        R = self.conv_x_r(X, edge_index, edge_weight)
-        R = R + self.conv_h_r(H, edge_index, edge_weight)
-        R = torch.sigmoid(R) 
+    def _calculate_reset_gate(self, X, edge_index, edge_weight, H, lambda_max):
+        R = self.conv_x_r(X, edge_index, edge_weight, lambda_max=lambda_max)
+        R = R + self.conv_h_r(H, edge_index, edge_weight, lambda_max=lambda_max)
+        R = torch.sigmoid(R)
         return R
 
-
-    def _calculate_candidate_state(self, X, edge_index, edge_weight, H, R):
-        H_tilde = self.conv_x_h(X, edge_index, edge_weight)
-        H_tilde = H_tilde + self.conv_h_h(H*R, edge_index, edge_weight)
+    def _calculate_candidate_state(self, X, edge_index, edge_weight, H, R, lambda_max):
+        H_tilde = self.conv_x_h(X, edge_index, edge_weight, lambda_max=lambda_max)
+        H_tilde = H_tilde + self.conv_h_h(H * R, edge_index, edge_weight, lambda_max=lambda_max)
         H_tilde = torch.tanh(H_tilde)
         return H_tilde
 
-
     def _calculate_hidden_state(self, Z, H, H_tilde):
-        H = Z*H + (1-Z)*H_tilde
+        H = Z * H + (1 - Z) * H_tilde
         return H
 
-
-    def forward(self, X: torch.FloatTensor, edge_index: torch.LongTensor,
-                edge_weight: torch.FloatTensor=None, H: torch.FloatTensor=None) -> torch.FloatTensor:
+    def forward(
+        self,
+        X: torch.FloatTensor,
+        edge_index: torch.LongTensor,
+        edge_weight: torch.FloatTensor = None,
+        H: torch.FloatTensor = None,
+        lambda_max: torch.Tensor = None,
+    ) -> torch.FloatTensor:
         """
         Making a forward pass. If edge weights are not present the forward pass
         defaults to an unweighted graph. If the hidden state matrix is not present
@@ -141,13 +156,15 @@ class GConvGRU(torch.nn.Module):
             * **edge_index** *(PyTorch Long Tensor)* - Graph edge indices.
             * **edge_weight** *(PyTorch Long Tensor, optional)* - Edge weight vector.
             * **H** *(PyTorch Float Tensor, optional)* - Hidden state matrix for all nodes.
+            * **lambda_max** *(PyTorch Tensor, optional but mandatory if normalization is not sym)* - Largest eigenvalue of Laplacian.
+
 
         Return types:
             * **H** *(PyTorch Float Tensor)* - Hidden state matrix for all nodes.
         """
         H = self._set_hidden_state(X, H)
-        Z = self._calculate_update_gate(X, edge_index, edge_weight, H)
-        R = self._calculate_reset_gate(X, edge_index, edge_weight, H)
-        H_tilde = self._calculate_candidate_state(X, edge_index, edge_weight, H, R)
+        Z = self._calculate_update_gate(X, edge_index, edge_weight, H, lambda_max)
+        R = self._calculate_reset_gate(X, edge_index, edge_weight, H, lambda_max)
+        H_tilde = self._calculate_candidate_state(X, edge_index, edge_weight, H, R, lambda_max)
         H = self._calculate_hidden_state(Z, H, H_tilde)
         return H

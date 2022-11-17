@@ -10,11 +10,12 @@ If you find *PyTorch Geometric Temporal* useful in your research, please conside
 
 .. code-block:: latex
 
-    >@misc{rozemberczki2021pytorch,
-           author = {Benedek Rozemberczki and Paul Scherer and Yixuan He and George Panagopoulos and Maria Astefanoaei and Oliver Kiss and Ferenc Beres and Nicolas Collignon and Rik Sarkar},
-           title = {{PyTorch Geometric Temporal: Spatiotemporal Signal Processing with Neural Machine Learning Models}},
-           year = {2021},
-           eprint = {arXiv:2104.07788},
+    >@inproceedings{rozemberczki2021pytorch,
+                    author = {Benedek Rozemberczki and Paul Scherer and Yixuan He and George Panagopoulos and Alexander Riedel and Maria Astefanoaei and Oliver Kiss and Ferenc Beres and Guzman Lopez and Nicolas Collignon and Rik Sarkar},
+                    title = {{PyTorch Geometric Temporal: Spatiotemporal Signal Processing with Neural Machine Learning Models}},
+                    year = {2021},
+                    booktitle={Proceedings of the 30th ACM International Conference on Information and Knowledge Management},
+                    pages = {4564–4573},
     }
 
 We briefly overview the fundamental concepts and features of PyTorch Geometric Temporal through simple examples.
@@ -108,13 +109,13 @@ We provide functions to create temporal splits of the data iterators. These func
 .. code-block:: python
 
     from torch_geometric_temporal.dataset import ChickenpoxDatasetLoader
-    from torch_geometric_temporal.signal import split_temporal_signal
+    from torch_geometric_temporal.signal import temporal_signal_split
 
     loader = ChickenpoxDatasetLoader()
 
     dataset = loader.get_dataset()
 
-    train_dataset, test_dataset = split_temporal_signal(dataset, train_ratio=0.8)
+    train_dataset, test_dataset = temporal_signal_split(dataset, train_ratio=0.8)
 
 
 
@@ -193,7 +194,7 @@ Using the holdout we will evaluate the performance of the trained recurrent grap
     cost = cost / (time+1)
     cost = cost.item()
     print("MSE: {:.4f}".format(cost))
-    >>> MSE: 0.6866
+    >>> MSE: 1.0232
     
 Web Traffic Prediction
 ----------------------
